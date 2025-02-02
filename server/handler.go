@@ -5,13 +5,14 @@ import (
 	"github.com/hocnt84/go-passport/constant"
 	"github.com/hocnt84/go-passport/contract"
 	"github.com/hocnt84/go-passport/errors"
+	"github.com/hocnt84/go-passport/models"
 	"net/http"
 	"time"
 )
 
 type (
 	// ClientInfoHandler get client info from request
-	ClientInfoHandler func(r *http.Request) (clientID, clientSecret string, err error)
+	ClientInfoHandler func(r *http.Request) (client contract.OauthClient, err error)
 
 	// ClientAuthorizedHandler check the client allows to use this authorization grant type
 	ClientAuthorizedHandler func(clientID string, grant constant.GrantType) (allowed bool, err error)
@@ -23,7 +24,7 @@ type (
 	UserAuthorizationHandler func(w http.ResponseWriter, r *http.Request) (userID string, err error)
 
 	// PasswordAuthorizationHandler get user id from username and password
-	PasswordAuthorizationHandler func(ctx context.Context, clientID, username, password string) (userID string, err error)
+	PasswordAuthorizationHandler func(ctx context.Context, client contract.OauthClient, username, password string) (userID string, err error)
 
 	// RefreshingScopeHandler check the scope of the refreshing token
 	RefreshingScopeHandler func(tgr *contract.TokenGenerateRequest, oldScope string) (allowed bool, err error)
@@ -53,21 +54,14 @@ type (
 	ResponseTokenHandler func(w http.ResponseWriter, data map[string]interface{}, header http.Header, statusCode ...int) error
 )
 
-// ClientFormHandler get client data from form
-func ClientFormHandler(r *http.Request) (string, string, error) {
-	clientID := r.Form.Get("client_id")
-	if clientID == "" {
-		return "", "", errors.ErrInvalidClient
-	}
-	clientSecret := r.Form.Get("client_secret")
-	return clientID, clientSecret, nil
-}
-
 // ClientBasicHandler get client data from basic authorization
-func ClientBasicHandler(r *http.Request) (string, string, error) {
+func ClientBasicHandler(r *http.Request) (contract.OauthClient, error) {
 	username, password, ok := r.BasicAuth()
 	if !ok {
-		return "", "", errors.ErrInvalidClient
+		return nil, errors.ErrInvalidClient
 	}
-	return username, password, nil
+	return &models.OauthClient{
+		ID:     username,
+		Secret: password,
+	}, nil
 }

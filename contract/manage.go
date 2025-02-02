@@ -16,6 +16,7 @@ type (
 
 // TokenGenerateRequest provide to generate the token request parameters
 type TokenGenerateRequest struct {
+	Client              OauthClient
 	ClientID            string
 	ClientSecret        string
 	UserID              string

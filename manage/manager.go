@@ -6,7 +6,6 @@ import (
 	"github.com/hocnt84/go-passport/config"
 	"github.com/hocnt84/go-passport/constant"
 	"github.com/hocnt84/go-passport/contract"
-	"github.com/hocnt84/go-passport/errors"
 	"github.com/hocnt84/go-passport/generates"
 	"github.com/hocnt84/go-passport/models"
 	"github.com/hocnt84/go-passport/util"
@@ -168,17 +167,7 @@ func (m *Manager) GenerateAuthToken(ctx context.Context, responseType constant.R
 }
 
 func (m *Manager) GenerateAccessToken(ctx context.Context, gt constant.GrantType, tgr *contract.TokenGenerateRequest) (contract.AccessToken, error) {
-	oauthClient, oauthClientError := m.GetClient(ctx, tgr.ClientID)
-	if oauthClientError != nil {
-		return nil, oauthClientError
-	}
-	if cliPass, ok := oauthClient.(contract.ClientPasswordVerifier); ok {
-		if !cliPass.VerifyPassword(tgr.ClientSecret) {
-			return nil, errors.ErrInvalidClient
-		}
-	} else if len(oauthClient.GetSecret()) > 0 && tgr.ClientSecret != oauthClient.GetSecret() {
-		return nil, errors.ErrInvalidClient
-	}
+
 	//if tgr.RedirectURI != "" {
 	//	if err := m.validateURI(cli.GetDomain(), tgr.RedirectURI); err != nil {
 	//		return nil, err
@@ -202,10 +191,10 @@ func (m *Manager) GenerateAccessToken(ctx context.Context, gt constant.GrantType
 	oauthAccessToken.SetID(uuid.NewString())
 
 	// Set ClientId
-	oauthAccessToken.SetClientId(oauthClient.GetID())
+	oauthAccessToken.SetClientId(tgr.Client.GetID())
 
 	// Set Name
-	oauthAccessToken.SetName(oauthClient.GetName())
+	oauthAccessToken.SetName(tgr.Client.GetName())
 
 	// Set Expires At
 	oauthAccessToken.SetExpiresAt(time.Now().UTC().Add(expiresAt * time.Second))
@@ -221,7 +210,7 @@ func (m *Manager) GenerateAccessToken(ctx context.Context, gt constant.GrantType
 	oauthRefreshToken.SetExpiresAt(time.Now().UTC().Add(RefreshTokenExpiresAt * time.Second))
 
 	generateBasic := &contract.GenerateBasic{
-		OauthClient:       oauthClient,
+		OauthClient:       tgr.Client,
 		UserID:            tgr.UserID,
 		CreateAt:          time.Now().UTC(),
 		OauthAccessToken:  oauthAccessToken,

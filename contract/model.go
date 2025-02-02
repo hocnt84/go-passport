@@ -28,6 +28,7 @@ type (
 		GetPersonalAccessClient() bool
 		GetPasswordClient() bool
 		GetRevoked() bool
+		VerifyPassword(secret string) bool
 	}
 	// OauthAuthCode the oauth auth code information model interface
 	OauthAuthCode interface {

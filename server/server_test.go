@@ -14,6 +14,7 @@ import (
 	"github.com/hocnt84/go-passport/models"
 	"github.com/hocnt84/go-passport/server"
 	"github.com/hocnt84/go-passport/store"
+	"golang.org/x/crypto/bcrypt"
 	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
@@ -99,12 +100,11 @@ func TestRefreshToken(t *testing.T) {
 	}))
 	defer httpTestServer.Close()
 	e := httpexpect.New(t, httpTestServer.URL)
-
 	// Set DataAccess
 	manager.SetClientDataAccess(ClientDataAccess(&models.OauthClient{
 		ID:                   clientID,
 		UserID:               userID,
-		Secret:               clientSecret,
+		Secret:               ClientSecretHashed(),
 		Name:                 "Name",
 		Provider:             "localhost",
 		Redirect:             "http://localhost",
@@ -141,7 +141,7 @@ func TestRefreshToken(t *testing.T) {
 		},
 		ForcePKCE: true,
 	}, manager)
-	srv.SetClientInfoHandler(server.ClientFormHandler)
+	srv.SetClientInfoHandler(ClientInfoHandler)
 
 	srv.UserAuthorizationHandler = func(w http.ResponseWriter, r *http.Request) (userID string, err error) {
 		return userID, err
@@ -173,7 +173,7 @@ func TestRefreshToken(t *testing.T) {
 		return
 	})
 
-	srv.SetPasswordAuthorizationHandler(func(ctx context.Context, clientID, username, password string) (string, error) {
+	srv.SetPasswordAuthorizationHandler(func(ctx context.Context, client contract.OauthClient, username, password string) (string, error) {
 		return username, nil
 	})
 
@@ -199,12 +199,11 @@ func TestPassword(t *testing.T) {
 	}))
 	defer httpTestServer.Close()
 	e := httpexpect.New(t, httpTestServer.URL)
-
 	// Set DataAccess
 	manager.SetClientDataAccess(ClientDataAccess(&models.OauthClient{
 		ID:                   clientID,
 		UserID:               userID,
-		Secret:               clientSecret,
+		Secret:               ClientSecretHashed(),
 		Name:                 "Name",
 		Provider:             "localhost",
 		Redirect:             "http://localhost",
@@ -241,7 +240,7 @@ func TestPassword(t *testing.T) {
 		},
 		ForcePKCE: true,
 	}, manager)
-	srv.SetClientInfoHandler(server.ClientFormHandler)
+	srv.SetClientInfoHandler(ClientInfoHandler)
 
 	srv.UserAuthorizationHandler = func(w http.ResponseWriter, r *http.Request) (userID string, err error) {
 		return userID, err
@@ -274,14 +273,14 @@ func TestPassword(t *testing.T) {
 		return
 	})
 
-	srv.SetPasswordAuthorizationHandler(func(ctx context.Context, clientID, username, password string) (string, error) {
+	srv.SetPasswordAuthorizationHandler(func(ctx context.Context, client contract.OauthClient, username, password string) (string, error) {
 		return username, nil
 	})
 
 	resObj := e.POST("/token").
 		WithFormField("grant_type", "password").
 		WithFormField("client_id", clientID).
-		WithFormField("client_secret", clientSecret).
+		WithFormField("client_secret", string(clientSecret)).
 		WithFormField("username", username).
 		WithFormField("password", password).
 		WithFormField("scope", "*").
@@ -299,12 +298,11 @@ func TestClientCredentials(t *testing.T) {
 	}))
 	defer httpTestServer.Close()
 	e := httpexpect.New(t, httpTestServer.URL)
-
 	// Set DataAccess
 	manager.SetClientDataAccess(ClientDataAccess(&models.OauthClient{
 		ID:                   clientID,
 		UserID:               userID,
-		Secret:               clientSecret,
+		Secret:               ClientSecretHashed(),
 		Name:                 "Name",
 		Provider:             "localhost",
 		Redirect:             "http://localhost",
@@ -327,7 +325,7 @@ func TestClientCredentials(t *testing.T) {
 
 	// Register Server
 	srv = server.NewDefaultServer(manager)
-	srv.SetClientInfoHandler(server.ClientFormHandler)
+	srv.SetClientInfoHandler(ClientInfoHandler)
 
 	// Set Internal Error
 	srv.SetInternalErrorHandler(func(err error) (re *errors.Response) {
@@ -361,7 +359,7 @@ func TestClientCredentials(t *testing.T) {
 		WithFormField("grant_type", "client_credentials").
 		WithFormField("scope", "all").
 		WithFormField("client_id", clientID).
-		WithFormField("client_secret", clientSecret).
+		WithFormField("client_secret", string(clientSecret)).
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
@@ -398,4 +396,25 @@ func validationRefreshToken(t *testing.T, e *httpexpect.Expect, refreshToken str
 		JSON().Object()
 
 	validationAccessToken(t, resObj.Value("access_token").String().Raw(), clientID)
+}
+
+func ClientInfoHandler(r *http.Request) (client contract.OauthClient, err error) {
+	clientId := r.Form.Get("client_id")
+	if clientId == "" {
+		return nil, errors.ErrInvalidClient
+	}
+	client, errClient := srv.Manager.GetClient(r.Context(), clientId)
+	if errClient != nil {
+		return nil, errClient
+	}
+	secret := r.Form.Get("client_secret")
+	if !client.VerifyPassword(secret) {
+		return nil, errors.ErrInvalidClient
+	}
+	return client, nil
+}
+
+func ClientSecretHashed() string {
+	clientSecretHashed, _ := bcrypt.GenerateFromPassword([]byte(clientSecret), bcrypt.DefaultCost)
+	return string(clientSecretHashed)
 }

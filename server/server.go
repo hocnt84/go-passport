@@ -30,7 +30,7 @@ func NewServer(cfg *Config, manager contract.Manager) *Server {
 		return "", errors.ErrAccessDenied
 	}
 
-	srv.PasswordAuthorizationHandler = func(ctx context.Context, clientID, username, password string) (string, error) {
+	srv.PasswordAuthorizationHandler = func(ctx context.Context, client contract.OauthClient, username, password string) (string, error) {
 		return "", errors.ErrAccessDenied
 	}
 	return srv
@@ -85,14 +85,15 @@ func (s *Server) ValidationTokenRequest(r *http.Request) (constant.GrantType, *c
 		return "", nil, errors.ErrUnsupportedGrantType
 	}
 
-	clientID, clientSecret, err := s.ClientInfoHandler(r)
+	client, err := s.ClientInfoHandler(r)
 	if err != nil {
 		return "", nil, err
 	}
 
 	tgr := &contract.TokenGenerateRequest{
-		ClientID:     clientID,
-		ClientSecret: clientSecret,
+		Client:       client,
+		ClientID:     client.GetID(),
+		ClientSecret: r.FormValue("client_secret"),
 		Request:      r,
 	}
 
@@ -115,7 +116,7 @@ func (s *Server) ValidationTokenRequest(r *http.Request) (constant.GrantType, *c
 			return "", nil, errors.ErrInvalidRequest
 		}
 
-		userID, err := s.PasswordAuthorizationHandler(r.Context(), clientID, username, password)
+		userID, err := s.PasswordAuthorizationHandler(r.Context(), tgr.Client, username, password)
 		if err != nil {
 			return "", nil, err
 		} else if userID == "" {

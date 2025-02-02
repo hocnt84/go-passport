@@ -1,6 +1,9 @@
 package models
 
-import "github.com/hocnt84/go-passport/contract"
+import (
+	"github.com/hocnt84/go-passport/contract"
+	"golang.org/x/crypto/bcrypt"
+)
 
 type OauthClient struct {
 	ID                   string `gorm:"primaryKey;type:varchar(36)"`
@@ -60,4 +63,8 @@ func (o *OauthClient) GetPasswordClient() bool {
 }
 func (o *OauthClient) GetRevoked() bool {
 	return o.Revoked
+}
+
+func (o *OauthClient) VerifyPassword(secret string) bool {
+	return bcrypt.CompareHashAndPassword([]byte(o.Secret), []byte(secret)) == nil
 }
