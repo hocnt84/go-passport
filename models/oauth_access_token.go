@@ -6,13 +6,13 @@ import (
 )
 
 type OauthAccessToken struct {
-	ID        string
-	UserId    string
-	ClientId  string
+	ID        string `gorm:"primaryKey;type:varchar(36)"`
+	UserId    string `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
+	ClientId  string `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
 	Name      string
 	Scopes    string
-	Revoked   bool
-	ExpiresAt time.Time
+	Revoked   bool      `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
+	ExpiresAt time.Time `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
 }
 
 // TableName overrides the table name used by User to `oauth_clients`

@@ -14,7 +14,7 @@ import (
 	"github.com/hocnt84/go-passport/models"
 	"github.com/hocnt84/go-passport/server"
 	"github.com/hocnt84/go-passport/store"
-	"gorm.io/driver/sqlite"
+	"gorm.io/driver/mysql"
 	"gorm.io/gorm"
 	"net/http"
 	"net/http/httptest"
@@ -29,11 +29,17 @@ var (
 	clientSecret   = "11111111"
 	username       = "jxx"
 	password       = "jxx"
+	db             *gorm.DB
 )
+
+func InitDatabase() {
+	//db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	db, _ = gorm.Open(mysql.Open("root:@tcp(localhost:3306)/identity_db2?multiStatements=true&parseTime=true"))
+}
 
 func init() {
 	manager = manage.NewDefaultManager()
-	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	InitDatabase()
 	manager.SetClientDataAccess(store.NewOauthClientStore(db))
 }
 
@@ -53,7 +59,7 @@ func testServer(t *testing.T, w http.ResponseWriter, r *http.Request) {
 }
 
 func ClientDataAccess(client *models.OauthClient) contract.OauthClientDataAccess {
-	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	InitDatabase()
 	clientStore := store.NewOauthClientStore(db)
 	clientStoreError := clientStore.Migration()
 	if clientStoreError != nil {
@@ -67,7 +73,7 @@ func ClientDataAccess(client *models.OauthClient) contract.OauthClientDataAccess
 }
 
 func AccessTokenDataAccess() contract.OauthAccessTokenDataAccess {
-	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	InitDatabase()
 	accessTokenStore := store.NewOauthAccessTokenStore(db)
 	accessTokenTokenError := accessTokenStore.Migration()
 	if accessTokenTokenError != nil {
@@ -76,7 +82,7 @@ func AccessTokenDataAccess() contract.OauthAccessTokenDataAccess {
 	return accessTokenStore
 }
 func RefreshTokenDataAccess() contract.OauthRefreshTokenDataAccess {
-	db, _ := gorm.Open(sqlite.Open("gorm.db"), &gorm.Config{})
+	InitDatabase()
 	accessTokenStore := store.NewOauthRefreshTokenStore(db)
 	accessTokenTokenError := accessTokenStore.Migration()
 	if accessTokenTokenError != nil {

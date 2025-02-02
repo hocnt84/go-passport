@@ -6,12 +6,12 @@ import (
 )
 
 type OauthAuthCode struct {
-	ID        string
-	UserId    string
-	ClientId  string
+	ID        string `gorm:"primaryKey;type:varchar(36)"`
+	UserId    string `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
+	ClientId  string `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
 	Scopes    string
-	Revoked   bool
-	ExpiresAt time.Time
+	Revoked   bool      `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
+	ExpiresAt time.Time `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
 }
 
 func NewOauthAuthCode() *OauthAuthCode {

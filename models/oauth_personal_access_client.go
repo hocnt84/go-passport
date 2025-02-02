@@ -3,7 +3,7 @@ package models
 import "github.com/hocnt84/go-passport/contract"
 
 type OauthPersonalAccessClient struct {
-	ID       string
+	ID       string `gorm:"primaryKey;type:varchar(36)"`
 	ClientID string
 }
 

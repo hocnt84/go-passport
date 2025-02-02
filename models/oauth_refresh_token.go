@@ -7,10 +7,10 @@ import (
 )
 
 type OauthRefreshToken struct {
-	ID            string
-	AccessTokenId string
-	Revoked       bool
-	ExpiresAt     time.Time
+	ID            string    `gorm:"primarykey"`
+	AccessTokenId string    `gorm:"index:idx_accessTokenId_revoked_expiresAt"`
+	Revoked       bool      `gorm:"index:idx_accessTokenId_revoked_expiresAt"`
+	ExpiresAt     time.Time `gorm:"index:idx_accessTokenId_revoked_expiresAt"`
 }
 
 // TableName overrides the table name used by User to `oauth_clients`
