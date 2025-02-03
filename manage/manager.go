@@ -239,7 +239,10 @@ func (m *Manager) GenerateAccessToken(ctx context.Context, gt constant.GrantType
 		responseAccessToken.SetRefreshToken(refreshToken)
 
 		// Save refresh token to DB
-		_ = m.oauthRefreshTokenDataAccess.Create(ctx, oauthRefreshToken)
+		refreshTokenCreateError := m.oauthRefreshTokenDataAccess.Create(ctx, oauthRefreshToken)
+		if refreshTokenCreateError != nil {
+			return nil, refreshTokenCreateError
+		}
 	}
 	return responseAccessToken, nil
 }
@@ -329,12 +332,21 @@ func (m *Manager) RefreshAccessToken(ctx context.Context, tgr *contract.TokenGen
 		responseAccessToken.SetRefreshToken(refreshToken)
 
 		// Save refresh token to DB
-		_ = m.oauthRefreshTokenDataAccess.Create(ctx, oauthRefreshToken)
+		refreshTokenCreateError := m.oauthRefreshTokenDataAccess.Create(ctx, oauthRefreshToken)
+		if refreshTokenCreateError != nil {
+			return nil, refreshTokenCreateError
+		}
 	}
 
 	// Delete old token
-	_ = m.RemoveAccessToken(ctx, oauthAccessTokenOld.GetID())
-	_ = m.RemoveRefreshToken(ctx, oauthAccessTokenOld.GetID())
+	oauthAccessTokenRemoveError := m.RemoveAccessToken(ctx, oauthAccessTokenOld.GetID())
+	if oauthAccessTokenRemoveError != nil {
+		return nil, oauthAccessTokenRemoveError
+	}
+	oauthRefreshTokenRemoveError := m.RemoveRefreshToken(ctx, oauthAccessTokenOld.GetID())
+	if oauthRefreshTokenRemoveError != nil {
+		return nil, oauthRefreshTokenRemoveError
+	}
 
 	return responseAccessToken, nil
 }
