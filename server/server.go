@@ -63,12 +63,12 @@ func (s *Server) HandleTokenRequest(w http.ResponseWriter, r *http.Request) erro
 
 	gt, tgr, err := s.ValidationTokenRequest(r)
 	if err != nil {
-		return s.tokenError(w, err)
+		return err
 	}
 
 	ti, err := s.GetAccessToken(ctx, gt, tgr)
 	if err != nil {
-		return s.tokenError(w, err)
+		return err
 	}
 
 	return s.token(w, s.GetTokenData(ti), nil)
