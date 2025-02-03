@@ -8,15 +8,17 @@ import (
 	"time"
 )
 
-func NewOauthRefreshTokenStore(db *gorm.DB) *OauthRefreshTokenStore {
+func NewOauthRefreshTokenStore(db *gorm.DB, tx string) *OauthRefreshTokenStore {
 	return &OauthRefreshTokenStore{
 		db: db,
+		tx: tx,
 	}
 }
 
 // OauthRefreshTokenStore information store
 type OauthRefreshTokenStore struct {
 	db *gorm.DB
+	tx string
 }
 
 func (o *OauthRefreshTokenStore) Migration() error {
@@ -24,7 +26,7 @@ func (o *OauthRefreshTokenStore) Migration() error {
 }
 
 func (o *OauthRefreshTokenStore) Create(ctx context.Context, info contract.OauthRefreshToken) error {
-	tx, ok := ctx.Value("tx").(*gorm.DB)
+	tx, ok := ctx.Value(o.tx).(*gorm.DB)
 	if !ok {
 		return o.db.Create(info).Error
 	}
@@ -48,7 +50,11 @@ func (o *OauthRefreshTokenStore) RemoveByRefreshTokenId(ctx context.Context, ref
 }
 
 func (o *OauthRefreshTokenStore) RemoveByAccessTokenId(ctx context.Context, accessTokenId string) error {
-	return o.db.Where(&models.OauthRefreshToken{
+	tx, ok := ctx.Value(o.tx).(*gorm.DB)
+	if !ok {
+		tx = o.db
+	}
+	return tx.Where(&models.OauthRefreshToken{
 		AccessTokenId: accessTokenId,
 	}).Delete(&models.OauthRefreshToken{}).Error
 }

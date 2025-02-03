@@ -8,15 +8,17 @@ import (
 )
 
 // NewOauthClientStore NewClientStore create client store
-func NewOauthClientStore(db *gorm.DB) *OauthClientStore {
+func NewOauthClientStore(db *gorm.DB, tx string) *OauthClientStore {
 	return &OauthClientStore{
 		db: db,
+		tx: tx,
 	}
 }
 
 // OauthClientStore ClientStore client information store
 type OauthClientStore struct {
 	db *gorm.DB
+	tx string
 }
 
 func (o *OauthClientStore) GetByID(ctx context.Context, id string) (contract.OauthClient, error) {

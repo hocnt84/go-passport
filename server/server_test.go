@@ -33,6 +33,7 @@ var (
 	username       = "jxx"
 	password       = "jxx"
 	db             *gorm.DB
+	tx             = "tx"
 )
 
 func InitDatabase() {
@@ -43,7 +44,7 @@ func InitDatabase() {
 func init() {
 	manager = manage.NewDefaultManager()
 	InitDatabase()
-	manager.SetClientDataAccess(store.NewOauthClientStore(db))
+	manager.SetClientDataAccess(store.NewOauthClientStore(db, tx))
 }
 
 func testServer(t *testing.T, w http.ResponseWriter, r *http.Request) {
@@ -63,7 +64,7 @@ func testServer(t *testing.T, w http.ResponseWriter, r *http.Request) {
 
 func ClientDataAccess(client *models.OauthClient) contract.OauthClientDataAccess {
 	InitDatabase()
-	clientStore := store.NewOauthClientStore(db)
+	clientStore := store.NewOauthClientStore(db, tx)
 	clientStoreError := clientStore.Migration()
 	if clientStoreError != nil {
 		return nil
@@ -77,7 +78,7 @@ func ClientDataAccess(client *models.OauthClient) contract.OauthClientDataAccess
 
 func AccessTokenDataAccess() contract.OauthAccessTokenDataAccess {
 	InitDatabase()
-	accessTokenStore := store.NewOauthAccessTokenStore(db)
+	accessTokenStore := store.NewOauthAccessTokenStore(db, tx)
 	accessTokenTokenError := accessTokenStore.Migration()
 	if accessTokenTokenError != nil {
 		return nil
@@ -86,7 +87,7 @@ func AccessTokenDataAccess() contract.OauthAccessTokenDataAccess {
 }
 func RefreshTokenDataAccess() contract.OauthRefreshTokenDataAccess {
 	InitDatabase()
-	accessTokenStore := store.NewOauthRefreshTokenStore(db)
+	accessTokenStore := store.NewOauthRefreshTokenStore(db, tx)
 	accessTokenTokenError := accessTokenStore.Migration()
 	if accessTokenTokenError != nil {
 		return nil
