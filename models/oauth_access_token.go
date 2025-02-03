@@ -6,11 +6,11 @@ import (
 )
 
 type OauthAccessToken struct {
-	ID        string `gorm:"primaryKey;type:varchar(36)"`
-	UserId    string `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
-	ClientId  string `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
-	Name      string
-	Scopes    string
+	ID        string    `gorm:"primaryKey;type:varchar(36)"`
+	UserId    string    `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
+	ClientId  string    `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
+	Name      string    `gorm:"type:varchar(150)"`
+	Scopes    string    `gorm:"type:text"`
 	Revoked   bool      `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
 	ExpiresAt time.Time `gorm:"index:idx_userId_clientId_revoked_expiresAt"`
 }
@@ -46,8 +46,8 @@ func (t *OauthAccessToken) SetName(s string) {
 	t.Name = s
 }
 
-func (t *OauthAccessToken) SetScopes(s string) {
-	t.Scopes = s
+func (t *OauthAccessToken) SetScopes(scopes string) {
+	t.Scopes = scopes
 }
 
 func (t *OauthAccessToken) SetRevoked(revoked bool) {

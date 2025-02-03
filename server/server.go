@@ -9,6 +9,7 @@ import (
 	"github.com/hocnt84/go-passport/errors"
 	"net/http"
 	"net/url"
+	"time"
 )
 
 // NewDefaultServer create a default authorization server
@@ -309,13 +310,13 @@ func (s *Server) GetTokenData(accessToken contract.AccessToken) map[string]inter
 	data := map[string]interface{}{
 		"access_token": accessToken.GetAccessToken(),
 		"token_type":   s.Config.TokenType,
-		"expires_in":   accessToken.GetOauthAccessToken().GetExpiresAt().UTC().Unix(),
+		"expires_in":   accessToken.GetOauthAccessToken().GetExpiresAt().UTC().Unix() - time.Now().Unix(),
 	}
 
-	//if scope := ti.GetScopes(); scope != "" {
-	//	data["scope"] = scope
-	//}
-	//
+	if scopes := accessToken.GetScopes(); len(scopes) > 0 {
+		data["scopes"] = scopes
+	}
+
 	if refresh := accessToken.GetRefreshToken(); refresh != "" {
 		data["refresh_token"] = refresh
 	}

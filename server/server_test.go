@@ -2,6 +2,7 @@ package server_test
 
 import (
 	"context"
+	"fmt"
 	"github.com/gavv/httpexpect"
 	"github.com/golang-jwt/jwt"
 	"github.com/google/uuid"
@@ -20,6 +21,7 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+	"time"
 )
 
 var (
@@ -213,10 +215,10 @@ func TestPassword(t *testing.T) {
 	}))
 	manager.SetAccessTokenDataAccess(AccessTokenDataAccess())
 	manager.SetRefreshTokenDataAccess(RefreshTokenDataAccess())
-	manager.SetClientTokenCfg(&config.Config{
+	manager.SetPasswordTokenCfg(&config.Config{
 		IsGenerateRefresh: true,
-		AccessTokenExp:    7200,
-		RefreshTokenExp:   7200,
+		AccessTokenExp:    time.Hour * 2,
+		RefreshTokenExp:   time.Hour * 2,
 	})
 	manager.MapAccessGenerate(&generates.JWTAccessGenerate{
 		SignedKeyID:  "00000000",
@@ -287,7 +289,7 @@ func TestPassword(t *testing.T) {
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-
+	fmt.Println(resObj.Value("expires_in"))
 	validationAccessToken(t, resObj.Value("access_token").String().Raw(), clientID)
 }
 

@@ -197,7 +197,7 @@ func (m *Manager) GenerateAccessToken(ctx context.Context, gt constant.GrantType
 	oauthAccessToken.SetName(tgr.Client.GetName())
 
 	// Set Expires At
-	oauthAccessToken.SetExpiresAt(time.Now().UTC().Add(expiresAt * time.Second))
+	oauthAccessToken.SetExpiresAt(time.Now().UTC().Add(expiresAt))
 
 	oauthRefreshToken := models.NewOauthRefreshToken()
 
@@ -207,7 +207,7 @@ func (m *Manager) GenerateAccessToken(ctx context.Context, gt constant.GrantType
 	RefreshTokenExpiresAt := grantConfig.RefreshTokenExp
 
 	// Set Expires At
-	oauthRefreshToken.SetExpiresAt(time.Now().UTC().Add(RefreshTokenExpiresAt * time.Second))
+	oauthRefreshToken.SetExpiresAt(time.Now().UTC().Add(RefreshTokenExpiresAt))
 
 	generateBasic := &contract.GenerateBasic{
 		OauthClient:       tgr.Client,

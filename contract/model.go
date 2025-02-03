@@ -15,6 +15,9 @@ type (
 
 		GetRefreshToken() string
 		SetRefreshToken(string)
+
+		SetScopes(scopes string)
+		GetScopes() string
 	}
 	// OauthClient the oauth client information model interface
 	OauthClient interface {

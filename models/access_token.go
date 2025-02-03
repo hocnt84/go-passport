@@ -9,6 +9,15 @@ type AccessToken struct {
 	oauthRefreshToken contract.OauthRefreshToken
 	accessToken       string
 	refreshToken      string
+	scopes            string
+}
+
+func (t *AccessToken) SetScopes(scopes string) {
+	t.scopes = scopes
+}
+
+func (t *AccessToken) GetScopes() string {
+	return t.scopes
 }
 
 func (t *AccessToken) GetAccessToken() string {
