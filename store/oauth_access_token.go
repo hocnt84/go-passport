@@ -23,7 +23,11 @@ func (t *OauthAccessTokenStore) Migration() error {
 }
 
 func (t OauthAccessTokenStore) Create(ctx context.Context, info contract.OauthAccessToken) error {
-	return t.db.Create(info).Error
+	tx, ok := ctx.Value("tx").(*gorm.DB)
+	if !ok {
+		return t.db.Create(info).Error
+	}
+	return tx.Create(info).Error
 }
 
 func (t OauthAccessTokenStore) GetAccessTokenByRefreshToken(ctx context.Context, refreshTokenId string) (contract.OauthAccessToken, error) {
