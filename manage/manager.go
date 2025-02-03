@@ -281,7 +281,7 @@ func (m *Manager) RefreshAccessToken(ctx context.Context, tgr *contract.TokenGen
 	oauthAccessToken.SetName(oauthClient.GetName())
 
 	// Set Expires At
-	oauthAccessToken.SetExpiresAt(time.Now().UTC().Add(expiresAt * time.Second))
+	oauthAccessToken.SetExpiresAt(time.Now().UTC().Add(expiresAt))
 
 	// Init oauth refresh token
 	oauthRefreshToken := models.NewOauthRefreshToken()
@@ -293,7 +293,7 @@ func (m *Manager) RefreshAccessToken(ctx context.Context, tgr *contract.TokenGen
 	RefreshTokenExpiresAt := grantConfig.RefreshTokenExp
 
 	// Set expires at
-	oauthRefreshToken.SetExpiresAt(time.Now().UTC().Add(RefreshTokenExpiresAt * time.Second))
+	oauthRefreshToken.SetExpiresAt(time.Now().UTC().Add(RefreshTokenExpiresAt))
 
 	// Init generate basic
 	generateBasic := &contract.GenerateBasic{

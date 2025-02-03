@@ -396,7 +396,7 @@ func validationRefreshToken(t *testing.T, e *httpexpect.Expect, refreshToken str
 		Expect().
 		Status(http.StatusOK).
 		JSON().Object()
-
+	fmt.Println(resObj.Value("expires_in"))
 	validationAccessToken(t, resObj.Value("access_token").String().Raw(), clientID)
 }
 
